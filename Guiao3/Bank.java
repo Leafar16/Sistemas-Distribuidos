@@ -8,7 +8,7 @@ class Bank {
  private static ReentrantLock lockBanco=new ReentrantLock();
 
     private static class Account {
-        private static ReentrantLock lockConta=new ReentrantLock();
+        private  ReentrantLock lockConta=new ReentrantLock();
 
         private int balance;
         Account(int balance) { this.balance = balance; }
@@ -59,81 +59,116 @@ class Bank {
 
     // account balance; 0 if no such account
     public int balance(int id) {
-        map.get(id).lockConta.lock();
+        Account c;
+        lockBanco.lock();
         try{
-            Account c = map.get(id);
-            if (c == null)
-                return 0;
+            c=map.get(id);
+            if (c==0) return 0;
+            c.lockConta.lock();
+        }finally{
+            lockBanco.unlock();
+        }
+        try{
             return c.balance();
         }finally{
-            map.get(id).lockConta.unlock();
+            c.lockConta.unlock();
         }
     }
 
     // deposit; fails if no such account
     public boolean deposit(int id, int value) {
-        map.get(id).lockConta.lock();
+        Account c;
+        lockBanco.lock();
         try{
-        Account c = map.get(id);
+        c = map.get(id);
         if (c == null)
             return false;
-        return c.deposit(value);
+            c.lockConta.lock();
         }finally{
-            map.get(id).lockConta.unlock();
+            lockBanco.unlock();
+        }
+        try{
+            return c.deposit(value);
+        }finally{
+            c.lockConta.unlock();
         }
     }
 
     // withdraw; fails if no such account or insufficient balance
     public boolean withdraw(int id, int value) {
-        map.get(id).lockConta.lock();
+        Account c;
+        lockBanco.lock();
         try{
-        Account c = map.get(id);
+        c = map.get(id);
         if (c == null)
             return false;
+            c.lockConta.lock();
+        }finally{
+            lockBanco.unlock();
+        }
+        try{
         return c.withdraw(value);
         }finally{
-            map.get(id).lockConta.unlock();
+            c.lockConta.unlock();
         }
     }
 
     // transfer value between accounts;
     // fails if either account does not exist or insufficient balance
     public boolean transfer(int from, int to, int value) {
-        map.get(Math.min(to, from)).lockConta.lock(); //to prevent deadlocks
-        map.get(Math.max(to, from)).lockConta.lock();
-        try{    
-            Account cfrom, cto;
+        Account cfrom, cto;
+        lockBanco.lock();
+        try{ 
             cfrom = map.get(from);
             cto = map.get(to);
             if (cfrom == null || cto ==  null)
                 return false;
+            if(from>to){
+                cfrom.lockConta.lock();
+                cto.lockConta.lock();
+            }else{
+                cto.lockConta.lock();
+                cfrom.lockConta.lock();
+            }
+            }finally{
+                lockBanco.unlock();
+            }      
+                try {
             return cfrom.withdraw(value) && cto.deposit(value);
         }finally{
-            map.get(Math.min(to, from)).lockConta.unlock();
-            map.get(Math.max(to, from)).lockConta.unlock();
+            cfrom.lockConta.unlock();
+            cto.lockConta.unlock();
         }
     }
+  
 
     // sum of balances in set of accounts; 0 if some does not exist
     public int totalBalance(int[] ids) {
-        for(int y : ids){
-            map.get(y).lockConta.lock();
-        }
+        int total = 0;
+        Account[] contas=new Account[ids.length];
+        lockBanco.lock();
         try{
-            int total = 0;
-            for (int i : ids) {
-                Account c = map.get(i);
-                if (c == null)
-                    return 0;
-                total += c.balance();
+            for(int i=0;i<ids.length;i++){
+                Account c=map.get(ids[i]);
+                if (c==null) return 0;
+                contas[i]=c;
+                c.lockConta.lock();
+            }
+            }finally{
+                lockBanco.unlock();
+            }
+            try{
+                for(Account c:contas){
+                    total += c.balance();
+
+                }
+            }finally{
+                for(Account c : contas){
+                   c.lockConta.unlock();
+            }     
             }
             return total;
-        }finally{
-            for(int y : ids){
-                map.get(y).lockConta.unlock();
-            }
+
         }
         
     }
-
-}
