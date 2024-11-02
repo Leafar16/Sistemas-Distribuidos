@@ -65,7 +65,7 @@ class Bank {
         lockRW.readLock().lock();
         try{
             c=map.get(id);
-            if (c==0) return 0;
+            if (c==null) return 0;
             c.lockConta.lock();
         }finally{
             lockBanco.unlock();
