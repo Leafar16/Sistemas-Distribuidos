@@ -2,6 +2,7 @@ package Guiao3;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class Bank {
     //criacao de um lock
@@ -27,10 +28,11 @@ class Bank {
 
     private Map<Integer, Account> map = new HashMap<Integer, Account>();
     private int nextId = 0;
+    private static ReentrantReadWriteLock lockRW=new ReentrantReadWriteLock();//O ReentrantReadWriteLock permite que múltiplas threads façam leituras simultâneas (obtendo o lock de leitura), mas só permite uma única thread para escrita (obtendo o lock de escrita)
 
     // create account and return account id
     public int createAccount(int balance) { //assim protegemos alteracoes no HashMap das contas
-        lockBanco.lock();
+        lockRW.writeLock().lock();
         try{
             Account c = new Account(balance);
             int id = nextId;
@@ -38,21 +40,21 @@ class Bank {
             map.put(id, c);
             return id;
         }finally{
-            lockBanco.unlock();
+            lockRW.writeLock().unlock();
         }
         
     }
 
     // close account and return balance, or 0 if no such account
     public int closeAccount(int id) {
-        lockBanco.lock();
+        lockRW.writeLock().lock();
         try{
             Account c = map.remove(id);
             if (c == null)
                 return 0;
             return c.balance();
         }finally{
-            lockBanco.unlock();
+            lockRW.writeLock().unlock();
         }
         
     }
@@ -60,7 +62,7 @@ class Bank {
     // account balance; 0 if no such account
     public int balance(int id) {
         Account c;
-        lockBanco.lock();
+        lockRW.readLock().lock();
         try{
             c=map.get(id);
             if (c==0) return 0;
@@ -71,21 +73,21 @@ class Bank {
         try{
             return c.balance();
         }finally{
-            c.lockConta.unlock();
+            lockRW.readLock().unlock();
         }
     }
 
     // deposit; fails if no such account
     public boolean deposit(int id, int value) {
         Account c;
-        lockBanco.lock();
+        lockRW.readLock().lock();
         try{
         c = map.get(id);
         if (c == null)
             return false;
             c.lockConta.lock();
         }finally{
-            lockBanco.unlock();
+            lockRW.readLock().unlock();
         }
         try{
             return c.deposit(value);
@@ -97,14 +99,14 @@ class Bank {
     // withdraw; fails if no such account or insufficient balance
     public boolean withdraw(int id, int value) {
         Account c;
-        lockBanco.lock();
+        lockRW.readLock().lock();
         try{
         c = map.get(id);
         if (c == null)
             return false;
             c.lockConta.lock();
         }finally{
-            lockBanco.unlock();
+            lockRW.readLock().unlock();
         }
         try{
         return c.withdraw(value);
@@ -117,7 +119,7 @@ class Bank {
     // fails if either account does not exist or insufficient balance
     public boolean transfer(int from, int to, int value) {
         Account cfrom, cto;
-        lockBanco.lock();
+        lockRW.readLock().lock();
         try{ 
             cfrom = map.get(from);
             cto = map.get(to);
@@ -131,7 +133,7 @@ class Bank {
                 cfrom.lockConta.lock();
             }
             }finally{
-                lockBanco.unlock();
+                lockRW.readLock().unlock();
             }      
                 try {
             return cfrom.withdraw(value) && cto.deposit(value);
@@ -146,7 +148,7 @@ class Bank {
     public int totalBalance(int[] ids) {
         int total = 0;
         Account[] contas=new Account[ids.length];
-        lockBanco.lock();
+        lockRW.readLock().lock();
         try{
             for(int i=0;i<ids.length;i++){
                 Account c=map.get(ids[i]);
@@ -155,7 +157,7 @@ class Bank {
                 c.lockConta.lock();
             }
             }finally{
-                lockBanco.unlock();
+                lockRW.readLock().unlock();
             }
             try{
                 for(Account c:contas){
