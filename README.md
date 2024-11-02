@@ -1,6 +1,6 @@
 # Sistemas Distribuídos
 
-Este repositório contém material e estudos relacionados à cadeira de Sistemas Distribuídos . O foco principal até agora tem sido a programação concorrente, incluindo tópicos como:
+Este repositório contém material relacionado à cadeira de Sistemas Distribuídos . O foco principal até agora tem sido a programação concorrente, incluindo tópicos como:
 
 - **Threads**: Criação e gestão de threads em programas.
 - **Condições**: Uso de variáveis de condição para sincronização entre threads.
