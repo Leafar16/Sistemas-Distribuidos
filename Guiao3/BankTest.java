@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-
 public class BankTest {
 
     private static int INITIAL_ACCOUNTS = 100;
@@ -14,8 +13,8 @@ public class BankTest {
 
     private static Bank bank;
     private static Lock lock;
-    // We use a list + map to achieve O(1) inserts, removes, and random lookups
-    private static List<Integer> activeIds;
+    // Use LinkedList instead of ArrayList to allow use of removeLast()
+    private static LinkedList<Integer> activeIds;
     private static Map<Integer, Integer> activeIdsIndexes;
     // Stores the expected total balance
     private static int totalBalance;
@@ -68,7 +67,7 @@ public class BankTest {
                 int lastId = activeIds.getLast();
                 activeIds.set(index, lastId);
                 activeIdsIndexes.put(lastId, index);
-                activeIds.removeLast();
+                activeIds.removeLast();  // Now works with LinkedList
                 activeIdsIndexes.remove(id);
             }
             lock.unlock();
@@ -95,13 +94,12 @@ public class BankTest {
         }
     }
 
-
     public static void main(String[] args) {
         System.out.println("Running");
 
         bank = new Bank();
         lock = new ReentrantLock();
-        activeIds = new ArrayList<>();
+        activeIds = new LinkedList<>();  // Change from ArrayList to LinkedList
         activeIdsIndexes = new HashMap<>();
 
         // Populate

@@ -8,7 +8,7 @@ import java.net.Socket;
 public class EchoClientNew {
     public static void main(String[] args) {
         try {
-            Socket socket = new Socket("localhost", 19876);
+            Socket socket = new Socket("localhost", 22222);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream());
@@ -19,7 +19,7 @@ public class EchoClientNew {
             while ((userInput = systemIn.readLine()) != null) {
                 try{ 
                     int userInputN=Integer.parseInt(userInput);
-                    out.println(userInput);
+                    out.println(userInputN);
                     out.flush();
                 }catch(NumberFormatException e) {
                     System.out.println("The input is not a valid integer.\n Input a valid integer:");

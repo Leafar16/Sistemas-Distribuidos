@@ -68,12 +68,11 @@ class Bank {
             if (c==null) return 0;
             c.lockConta.lock();
         }finally{
-            lockBanco.unlock();
-        }
+            lockRW.readLock().unlock();        }
         try{
             return c.balance();
         }finally{
-            lockRW.readLock().unlock();
+            c.lockConta.unlock();
         }
     }
 
