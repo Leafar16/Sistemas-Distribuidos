@@ -11,7 +11,7 @@ public class FramedConnection implements AutoCloseable {
     private final DataInputStream input;
     private final DataOutputStream output;
 
-    private static ReentrantLock sendLock=new ReentrantLock();
+    private static ReentrantLock sendLock=new ReentrantLock(); // utilizando dois locks diferentes,podemos ler enquanto escrevemos
     private static ReentrantLock receiveLock=new ReentrantLock();
 
 

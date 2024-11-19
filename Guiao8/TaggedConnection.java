@@ -31,22 +31,16 @@ public class TaggedConnection implements AutoCloseable {
      }
 
      public void send(Frame frame) throws IOException {
-        sendLock.lock();
-        try{
-            output.writeInt(frame.tag);
-            output.writeInt(frame.data.length);
-            output.write(frame.data);
-            output.flush();
-        }finally{
-            sendLock.unlock();
-        }
+            send(frame.tag,frame.data);
      }
      
      public void send(int tag, byte[] data) throws IOException {
         sendLock.lock();
         try{
             output.writeInt(tag);
+            output.writeInt(data.length);
             output.write(data);
+            output.flush();
         }finally{
             sendLock.unlock();
         }
